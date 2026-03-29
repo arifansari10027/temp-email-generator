@@ -1,32 +1,32 @@
 export default {
   async email(message, env, ctx) {
-    ctx.waitUntil(processEmail(message));
+    console.log("EMAIL TRIGGERED");
+
+    ctx.waitUntil(handleEmail(message));
   }
 };
 
-async function processEmail(message) {
+async function handleEmail(message) {
   try {
-    let raw = await new Response(message.raw).text();
+    console.log("Processing email");
 
-    let body = extractBody(raw);
-
-    const emailData = {
-      to: message.to,
-      from: message.from,
-      subject: message.headers.get("subject") || "No Subject",
-      body: body
-    };
-
-    fetch("http://<YOUR_url>/receive-email", {
+    const res = await fetch("https://YOUR_IP/receive-email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(emailData)
+      body: JSON.stringify({
+        to: message.to,
+        from: message.from,
+        subject: message.headers.get("subject"),
+        body: "test"
+      })
     });
 
+    console.log("STATUS:", res.status);
+
   } catch (err) {
-    console.log("Worker Error:", err);
+    console.log("FETCH ERROR:", err);
   }
 }
 
@@ -45,6 +45,7 @@ function extractBody(raw) {
         const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
         let text = new TextDecoder("utf-8").decode(bytes);
 
+        // ✅ CLEAN TEXT
         text = text.replace(/\r\n|\n|\r/g, " ");
         text = text.replace(/\s+/g, " ").trim();
 
@@ -52,6 +53,7 @@ function extractBody(raw) {
       } catch {}
     }
 
+    // Quoted-printable fallback
     const qpMatch = raw.match(
       /Content-Transfer-Encoding: quoted-printable\s+([\s\S]*?)--/
     );
