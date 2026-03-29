@@ -2,10 +2,35 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base
 from models import Email
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+@app.get("/")
+def root():
+    return {"message": "API running"}
+
+@app.get("/emails")
+def get_emails():
+    return [
+        "public@klickon.tech",
+        "info@klickon.tech",
+        "anonymous@klickon.tech",
+        "hello@klickon.tech",
+        "info@holamail.dpdns.org",
+        "public@holamail.dpdns.org",
+        "random@holamail.dpdns.org"
+    ]
 
 
 # Dependency
